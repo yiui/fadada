@@ -1,0 +1,27 @@
+{
+    "name": "yiui/fadada",
+    "description": "fadada for php",
+    "type": "library",
+    "keywords": ["yii2","extension","document"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "nature",
+            "email": "yowwoy@outlook.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "^2.0.0"
+    },
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "yiui\\fadada\\": "src"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
