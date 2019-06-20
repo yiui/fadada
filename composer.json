@@ -13,15 +13,14 @@
     "require": {
         "yiisoft/yii2": "^2.0.0"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
             "yiui\\fadada\\": "src"
         }
     },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.0.x-dev"
-        }
+    "require-dev" : {
+        "phpunit/phpunit": "~4.0",
+        "satooshi/php-coveralls": "~1.0"
     }
 }
