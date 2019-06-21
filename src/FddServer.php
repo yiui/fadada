@@ -684,7 +684,7 @@ class FddServer
                 )
             )
         );
-        return $this->curlSend("get_person_verify_ur", 'post', [
+        return $this->curlSend("get_person_verify_url", 'post', [
             //公共参数
             "app_id" => $this->appId,
             "timestamp" => $this->timestamp,
