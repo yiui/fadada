@@ -8,6 +8,8 @@
 
 namespace yiui\fadada;
 
+use yiui\fadada\Encrypt;
+
 /**
  * Class FddServer
  */
@@ -99,20 +101,20 @@ class FddServer
                 )
             )
         );
-        return $this->curlSend("hash_deposit", 'post', [
+        return $this->curlSend("hash_deposit", 'get', [
             //公共参数
             "app_id" => $this->appId,
             "timestamp" => $this->timestamp,
             "v" => $this->version,
             "msg_digest" => $msg_digest,
             //业务参数
-            "customer_id " => $customer_id,//客户编号
+            "customer_id" => $customer_id,//客户编号
             "preservation_name" => $preservation_name,//存证名称
             "file_name" => $file_name,//文件名
             "noper_time" => $noper_time,//文件最后修改时间 文件最后修改时间(unix 时间，单位s):file.lastModified()/1000
             "file_size" => $file_size,//文件大小  字符类型；值单位（byte） ;最大值:“9223372036854775807” >> 2^63-1 最小值:0sha256
             "original_sha25" => $original_sha25,//文件哈希值 文件 hash 值： sha256 算法
-            "transaction_id " => $transaction_id,//交易号
+            "transaction_id" => $transaction_id,//交易号  自定义
             "cert_flag" => $cert_flag,//是否认证成 功后自动申请实名证书 参 数 值 为 “0”：不申 请， 参 数 值 为 “1”：自动 申请
         ]);
     }
@@ -128,19 +130,19 @@ class FddServer
      * @param string $mobile
      * @param string $preservation_name
      * @param string $preservation_data_provider
-     * @param string $transactionId
+     * @param string $mobile_essential_factor
      * @param string $preservation_name
      * @param string $document_type
      * @param string $cert_flag
      * @param string $verified_type
      * @return array
      */
-    public function personDeposit($customer_id, $name, $idcard, $mobile, $preservation_name, $preservation_data_provider, $transactionId, $document_type = 0, $cert_flag = 0, $verified_type = 2)
+    public function personDeposit($customer_id, $name, $idcard, $mobile, $preservation_name, $preservation_data_provider, $mobile_essential_factor, $document_type = 0, $cert_flag = 1, $verified_type = 2)
     {
-        //verifiedType=1 公安部二要素
-        $mobile_essential_factor = json_encode([
-            'transactionId' => $transactionId,//交易号
-        ]);
+        //verifiedType=2 公安部三要素
+//        $mobile_essential_factor = json_encode([
+//            'transactionId' => $transactionId,//交易号
+//        ]);
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
@@ -163,12 +165,70 @@ class FddServer
             "idcard" => $idcard,//证件号
             "mobile" => $mobile,//手机号
             "document_type" => $document_type,//证件类型 默认是 0：身份证， 具体查看 5.18 附录
-            "mobile_essential_factor" => $mobile_essential_factor,
-            // "public_security_essential_factor" => $public_security_essential_factor,//公安部二要素(姓名+身份证);
+            "mobile_essential_factor" => $mobile_essential_factor,// 手机三要素
             "cert_flag" => $cert_flag,//是 否认 证成 功后 自动 申请 实名证书参 数值 为“0”：不申请，参 数值 为“1”：自动申请
         ]);
     }
 
+
+    /**
+     *
+     *
+     * 三要素身份验证
+     * @param string $name
+     * @param string $idcard
+     * @param string $mobile
+     * @return array
+     */
+    public function threeElementVerifyMobile($name, $idcard, $mobile)
+    {
+        /**
+         *
+         * 3des(姓名|身份证号码|手机号， app_secret)
+         **/
+        $verify_element =$this->encrypt($name."|".$idcard."|". $mobile,$this->appSecret);
+        $verify_element=strtoupper($verify_element[1]);
+        $msg_digest = base64_encode(
+            strtoupper(
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $verify_element))
+                )
+            )
+        );
+        return $this->curlSend("three_element_verify_mobile", 'post', [
+            //公共参数
+            "app_id" => $this->appId,
+            "timestamp" => $this->timestamp,
+            "v" => $this->version,
+            "msg_digest" => $msg_digest,
+            //业务参数
+            "verify_element" => $verify_element,//三要素（姓名、 身份证号码、手机号码
+        ]);
+    }
+
+    /**
+     *
+     * 3des加密
+     * @param string $data
+     * @param string $key
+     * @return array
+     */
+    private function encrypt($data,$key)
+    {
+        try {
+            if (!in_array('des-ede3', openssl_get_cipher_methods())) {
+                throw new \Exception('未知加密方法');
+            }
+            $ivLen  = openssl_cipher_iv_length('des-ede3');
+            $iv     = openssl_random_pseudo_bytes($ivLen);
+            $result = bin2hex(openssl_encrypt($data, 'des-ede3', $key, OPENSSL_RAW_DATA, $iv));
+            if (!$result) {
+                throw new \Exception('加密失败');
+            }
+            return [TRUE, $result];
+        } catch (\Exception $e) {
+            return [FALSE, $e->getMessage()];
+        }
+    }
     /**
      *
      * 查询个人实名认证信息
@@ -293,14 +353,13 @@ class FddServer
      * 编号证书申请
      * @param string $customer_id
      * @param string $evidence_no
-     * @param string $sign_password
      * @return array
      */
-    public function applyClientNumcert($customer_id, $evidence_no, $sign_password)
+    public function applyClientNumcert($customer_id, $evidence_no)
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id . $evidence_no . $sign_password))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id . $evidence_no))
                 )
             )
         );
@@ -676,11 +735,12 @@ class FddServer
      * @param string $page_modify
      * @return array
      */
-    public function getPersonVerifyUrl($customer_id, $notify_url, $verified_way = 0, $page_modify = 1)
+    public function getPersonVerifyUrl($customer_id, $notify_url, $verified_way = 2, $page_modify = 1, $cert_flag = 0)
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$customer_id, $notify_url, $page_modify, $verified_way])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
+                        $this->appSecret . $this->ascllSort([$cert_flag, $customer_id, $notify_url, $page_modify, $verified_way])))
                 )
             )
         );
@@ -693,20 +753,9 @@ class FddServer
             //业务参数
             "customer_id" => $customer_id,//客户编号
             "verified_way" => $verified_way,//实名认证套餐类型
-            /**实名认证套餐类型
-             * 0:三要素标准方案；
-             * 1:三要素补充方案；
-             * 2:四要素标准方案；
-             * 3:四要素补充方案',
-             * 4:纯三要素方案；
-             * 5:纯四要素方案；
-             * 6 是补充三要素方案+人工
-             * 审核，
-             * 7 是补充四要素方案+人工
-             * 审核
-             **/
             "page_modify" => $page_modify,//是否允许用户页面修改1 允许，2 不允许
             "notify_url" => $notify_url,//回调地址 异步通知认证结果
+            "cert_flag" => $cert_flag,//是否认证成功后自动申请实名证书参数值为“0”：不申请，参数值为“1”：自动申请
         ]);
     }
 
@@ -799,9 +848,9 @@ class FddServer
      * @param array $arr
      * @return array
      */
-    private function ascllSort($arr)
+    private function ascllSort($arr, $sf = 0)
     {
-        sort($arr, 1);
+        sort($arr, $sf);
         $tmp = implode('', $arr);
         return $tmp;
     }
