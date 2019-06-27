@@ -416,7 +416,7 @@ class FddServer
 
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$content, $customer_id])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$content, $customer_id],1)))
                 )
             )
         );
@@ -472,11 +472,10 @@ class FddServer
      *  模板上传
      * @param string $contract_id
      * @param string $file
-     * @param string $doc_url
      * @param string $doc_type
      * @return array
      */
-    public function uploadtemplate($template_id, $file, $doc_url, $doc_type = '.pdf')
+    public function uploadtemplate($template_id,$doc_url=null, $file=null)
     {
         $msg_digest = base64_encode(
             strtoupper(
@@ -494,7 +493,7 @@ class FddServer
             "template_id" => $template_id,//模板编号
             "doc_url" => $doc_url,//文档地址 字段类型：字符串， 须为 URLdoc_url 和 file两个参数必选一
             "file" => $file,//PDF 文档  File 文件 doc_url和 file 两个参数必选一
-            "doc_type" => $doc_type,//文档类型  .pdf
+           // "doc_type" => $doc_type,//文档类型  .pdf
         ]);
     }
 
