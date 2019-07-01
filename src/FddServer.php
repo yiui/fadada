@@ -8,7 +8,9 @@
 
 namespace yiui\fadada;
 
-use yiui\fadada\Encrypt;
+use PhpOffice\PhpSpreadsheet\Calculation\Exception;
+use linslin\yii2\curl;
+
 
 /**
  * Class FddServer
@@ -240,7 +242,7 @@ class FddServer
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret . $this->ascllSort([$verified_serialno])))
+                        $this->appSecret .$verified_serialno))
                 )
             )
         );
@@ -266,14 +268,14 @@ class FddServer
      * @param string $company_name
      * @param string $credit_code
      * @param string $credit_code_file
-     * @param string $company_principal_verifie_msg 企业负责人信息
-     * @param string $applyNum
+     * @param string $company_principal_verified_msg 企业负责人信息
+     * @param string $public_security_essential_factor
      * @param string $document_type
      * @param string $verified_mode
      * @param string $company_principal_type
      * @return array
      */
-    public function companyDeposit($transaction_id, $company_customer_id, $company_preservation_name, $company_preservation_data_provider, $company_name, $credit_code, $credit_code_file, $company_principal_verifie_msg, $applyNum, $power_attorney_file, $document_type = 1, $verified_mode = 1, $company_principal_type = 1)
+    public function companyDeposit($transaction_id, $company_customer_id, $company_preservation_name, $company_preservation_data_provider, $company_name, $credit_code, $credit_code_file, $company_principal_verified_msg, $power_attorney_file, $document_type = 1, $verified_mode = 1, $company_principal_type = 1)
     {
         //企业负责人信息
 //        $company_principal_verifie_msg = json_encode([
@@ -285,17 +287,47 @@ class FddServer
 //            'verified_type' => $verified_type,//企业负责人实名存证类型 1:公安部二要素(姓名+身份证);2:手机三要素(姓名+身份证+手机号);3:银行卡三要素(姓名+身份证+银行卡);4:四要素(姓名+身份证+手机号+ 银行卡)Z：其他
 //            'customer_id' => $customer_id,//企业负责人客户编号
 //        ]);
-        //verifiedType=1 公安部二要素
-        $public_security_essential_factor = json_encode([
-            'applyNum' => $applyNum,//申请编号
-        ]);
+//        //verifiedType=1 公安部二要素
+//        $public_security_essential_factor = json_encode([
+//            'applyNum' => $applyNum,//申请编号
+//        ]);
+
+
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $company_name . $company_principal_type . $company_principal_verifie_msg . $credit_code
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $company_name . $company_principal_type . $company_principal_verified_msg . $credit_code
                         . $company_customer_id . $document_type . $company_preservation_data_provider . $company_preservation_name . $transaction_id . $verified_mode))
                 )
             )
         );
+
+        $credit_code_file=new \CURLFile(realpath($credit_code_file));
+        $power_attorney_file=new \CURLFile(realpath($power_attorney_file));
+        // POST URL form-urlencoded
+//        $curl = new curl\Curl();
+//        $response = $curl->setPostParams([
+//            //公共参数
+//            "app_id" => $this->appId,
+//            "timestamp" => $this->timestamp,
+//            "v" => $this->version,
+//            "msg_digest" => $msg_digest,
+//            //业务参数
+//            "customer_id" => $company_customer_id,//企业客户编号
+//            "preservation_name " => $company_preservation_name,//企业存证名称
+//            "preservation_data_provider" => $company_preservation_data_provider,//存证提供者
+//            "company_name" => $company_name,//企业名称
+//            "document_type" => $document_type,//证件类型 1:三证合一 2：旧版营业执照
+//            "credit_code" => $credit_code,//统 一社 会信用代码
+//            "credit_code_file" => $credit_code_file,//统 一社 会信 用代 码电子版
+//            "verified_mode" => $verified_mode,//实 名认 证方式1:授权委托书 2:银行对公打款
+//            "power_attorney_file" => $power_attorney_file,//授 权委 托书电子版
+//            "company_principal_type" => $company_principal_type,//企 业负 责人身份 :1.法人， 2 代理人
+//            "company_principal_verified_msg" => $company_principal_verified_msg,//json企业负责人实名存证信息
+//            "transaction_id" => $transaction_id,//交易号
+//            'public_security_essential_factor' => $public_security_essential_factor,
+//        ])
+//            ->post('http://test.api.fabigbig.com:8888/api/company_deposit.api');
+//var_dump($response);exit;
         return $this->curlSend("company_deposit", 'post', [
             //公共参数
             "app_id" => $this->appId,
@@ -304,7 +336,7 @@ class FddServer
             "msg_digest" => $msg_digest,
             //业务参数
             "customer_id" => $company_customer_id,//企业客户编号
-            "preservation_name " => $company_preservation_name,//企业存证名称
+            "preservation_name" => $company_preservation_name,//企业存证名称
             "preservation_data_provider" => $company_preservation_data_provider,//存证提供者
             "company_name" => $company_name,//企业名称
             "document_type" => $document_type,//证件类型 1:三证合一 2：旧版营业执照
@@ -313,10 +345,8 @@ class FddServer
             "verified_mode" => $verified_mode,//实 名认 证方式1:授权委托书 2:银行对公打款
             "power_attorney_file" => $power_attorney_file,//授 权委 托书电子版
             "company_principal_type" => $company_principal_type,//企 业负 责人身份 :1.法人， 2 代理人
-            "company_principal_verifie_msg" => $company_principal_verifie_msg,//json 企 业负 责人 实名 存证 信息
+            "company_principal_verified_msg" => $company_principal_verified_msg,//json企业负责人实名存证信息
             "transaction_id" => $transaction_id,//交易号
-            'public_security_essential_factor' => $public_security_essential_factor,
-            'power_attorney_file' => $power_attorney_file,//授 权委 托书电子版
         ]);
     }
 
@@ -332,7 +362,7 @@ class FddServer
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret . $this->ascllSort([$verified_serialno])))
+                        $this->appSecret .$verified_serialno))
                 )
             )
         );
@@ -388,7 +418,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$customer_id, $signature_img_base64])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$customer_id.$signature_img_base64))
                 )
             )
         );
@@ -416,7 +446,7 @@ class FddServer
 
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$content, $customer_id],1)))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$content.$customer_id))
                 )
             )
         );
@@ -447,7 +477,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$contract_id])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$contract_id))
                 )
             )
         );
@@ -479,7 +509,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$template_id])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$template_id))
                 )
             )
         );
@@ -672,7 +702,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$contract_id])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$contract_id))
                 )
             )
         );
@@ -734,12 +764,12 @@ class FddServer
      * @param string $page_modify
      * @return array
      */
-    public function getPersonVerifyUrl($customer_id, $notify_url, $verified_way = 2, $page_modify = 1, $cert_flag = 0)
+    public function getPersonVerifyUrl($customer_id, $notify_url, $verified_way = '0', $page_modify = '1', $cert_flag = '0')
     {
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret . $this->ascllSort([$cert_flag, $customer_id, $notify_url, $page_modify, $verified_way])))
+                        $this->appSecret.$customer_id.$notify_url.$page_modify.$verified_way))
                 )
             )
         );
@@ -754,7 +784,7 @@ class FddServer
             "verified_way" => $verified_way,//实名认证套餐类型
             "page_modify" => $page_modify,//是否允许用户页面修改1 允许，2 不允许
             "notify_url" => $notify_url,//回调地址 异步通知认证结果
-            "cert_flag" => $cert_flag,//是否认证成功后自动申请实名证书参数值为“0”：不申请，参数值为“1”：自动申请
+          //  "cert_flag" => $cert_flag,//是否认证成功后自动申请实名证书参数值为“0”：不申请，参数值为“1”：自动申请
         ]);
     }
 
@@ -770,7 +800,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$customer_id, $verified_serialno])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$customer_id.$verified_serialno))
                 )
             )
         );
@@ -798,7 +828,7 @@ class FddServer
 
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$customer_id, $verified_serialno])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$customer_id.$verified_serialno))
                 )
             )
         );
@@ -826,7 +856,7 @@ class FddServer
         $timestamp = date("YmdHis");
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $this->ascllSort([$uuid])))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$uuid))
                 )
             )
         );
@@ -843,18 +873,6 @@ class FddServer
     }
 
     /**
-     *ascll码排序
-     * @param array $arr
-     * @return array
-     */
-    private function ascllSort($arr, $sf = 0)
-    {
-        sort($arr, $sf);
-        $tmp = implode('', $arr);
-        return $tmp;
-    }
-
-    /**
      *
      * @param string $url 请求路由
      * @param string $method 请求方式post/get
@@ -864,6 +882,7 @@ class FddServer
     private function curlSend($url, $method = 'post', $data = '')
     {
         $fadada_url = $this->host . $url . '.api';
+        try{
         $ch = curl_init(); //初始化
         $headers = array('Accept-Charset: utf-8');
         //设置URL和相应的选项
@@ -883,6 +902,9 @@ class FddServer
         $temp = json_decode($temp);
         curl_close($ch);
         return $temp; //return 返回值
+        }catch (\Exception $e){
+            return $e;
+        }
     }
 
 
