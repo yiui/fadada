@@ -8,9 +8,6 @@
 
 namespace yiui\fadada;
 
-use PhpOffice\PhpSpreadsheet\Calculation\Exception;
-use linslin\yii2\curl;
-
 
 /**
  * Class FddServer
@@ -188,8 +185,8 @@ class FddServer
          *
          * 3des(姓名|身份证号码|手机号， app_secret)
          **/
-        $verify_element =$this->encrypt($name."|".$idcard."|". $mobile,$this->appSecret);
-        $verify_element=strtoupper($verify_element[1]);
+        $verify_element = $this->encrypt($name . "|" . $idcard . "|" . $mobile, $this->appSecret);
+        $verify_element = strtoupper($verify_element[1]);
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $verify_element))
@@ -214,14 +211,14 @@ class FddServer
      * @param string $key
      * @return array
      */
-    private function encrypt($data,$key)
+    private function encrypt($data, $key)
     {
         try {
             if (!in_array('des-ede3', openssl_get_cipher_methods())) {
                 throw new \Exception('未知加密方法');
             }
-            $ivLen  = openssl_cipher_iv_length('des-ede3');
-            $iv     = openssl_random_pseudo_bytes($ivLen);
+            $ivLen = openssl_cipher_iv_length('des-ede3');
+            $iv = openssl_random_pseudo_bytes($ivLen);
             $result = bin2hex(openssl_encrypt($data, 'des-ede3', $key, OPENSSL_RAW_DATA, $iv));
             if (!$result) {
                 throw new \Exception('加密失败');
@@ -231,6 +228,7 @@ class FddServer
             return [FALSE, $e->getMessage()];
         }
     }
+
     /**
      *
      * 查询个人实名认证信息
@@ -242,7 +240,7 @@ class FddServer
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret .$verified_serialno))
+                        $this->appSecret . $verified_serialno))
                 )
             )
         );
@@ -301,8 +299,8 @@ class FddServer
             )
         );
 
-        $credit_code_file=new \CURLFile(realpath($credit_code_file));
-        $power_attorney_file=new \CURLFile(realpath($power_attorney_file));
+        $credit_code_file = new \CURLFile(realpath($credit_code_file));
+        $power_attorney_file = new \CURLFile(realpath($power_attorney_file));
         // POST URL form-urlencoded
 //        $curl = new curl\Curl();
 //        $response = $curl->setPostParams([
@@ -362,7 +360,7 @@ class FddServer
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret .$verified_serialno))
+                        $this->appSecret . $verified_serialno))
                 )
             )
         );
@@ -418,7 +416,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$customer_id.$signature_img_base64))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id . $signature_img_base64))
                 )
             )
         );
@@ -436,7 +434,7 @@ class FddServer
 
     /**
      *
-     * 新增用户签章图片
+     * 自定义印章
      * @param string $customer_id
      * @param string $signature_img_base64
      * @return array
@@ -446,7 +444,7 @@ class FddServer
 
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$content.$customer_id))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $content . $customer_id))
                 )
             )
         );
@@ -477,7 +475,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$contract_id))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $contract_id))
                 )
             )
         );
@@ -505,11 +503,11 @@ class FddServer
      * @param string $doc_type
      * @return array
      */
-    public function uploadtemplate($template_id,$doc_url=null, $file=null)
+    public function uploadtemplate($template_id, $doc_url = null, $file = null)
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$template_id))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $template_id))
                 )
             )
         );
@@ -523,7 +521,6 @@ class FddServer
             "template_id" => $template_id,//模板编号
             "doc_url" => $doc_url,//文档地址 字段类型：字符串， 须为 URLdoc_url 和 file两个参数必选一
             "file" => $file,//PDF 文档  File 文件 doc_url和 file 两个参数必选一
-           // "doc_type" => $doc_type,//文档类型  .pdf
         ]);
     }
 
@@ -539,14 +536,15 @@ class FddServer
      * @param string $font_type
      * @return array
      */
-    public function generateContract($doc_title, $template_id, $contract_id, $font_size, $parameter_map, $font_type)
+    public function generateContract($doc_title, $template_id, $contract_id, $parameter_map, $font_type = 0, $font_size = 12)
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $template_id . $contract_id))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $template_id . $contract_id)) . $parameter_map
                 )
             )
         );
+
         return $this->curlSend("generate_contract", 'post', [
             //公共参数
             "app_id" => $this->appId,
@@ -570,17 +568,18 @@ class FddServer
      * @param string $transaction_id
      * @param string $contract_id
      * @param string $customer_id
+     * @param string $doc_title
      * @param string $client_role
-     * @param string $pagenum
+     * @param inter $pagenum
      * @param string $x
      * @param string $y
      * @return array
      */
-    public function extsignAuto($transaction_id, $contract_id, $customer_id, $client_role, $pagenum, $x, $y)
+    public function extsignAuto($transaction_id, $contract_id, $customer_id, $doc_title, $sign_keyword, $client_role, $pagenum, $keyword_strategy = 2)
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id))
+                sha1($this->appId . strtoupper(md5($transaction_id . $this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id))
                 )
             )
         );
@@ -593,11 +592,18 @@ class FddServer
             //业务参数
             "transaction_id" => $transaction_id,//交易号
             "contract_id" => $contract_id,//合同编号
+            "doc_title" => $doc_title,//合同标题
+
             "customer_id" => $customer_id,//客户编号
             "client_role" => $client_role,//客户角色  1-接入平台；2-仅适用互金行业担保公司或担保人；3-接入平台客户（互金行业指投资人）；4-仅适用互金行业借款企业或者借款人如果需要开通自动签权限请联系法
             "pagenum" => $pagenum,//页码 签章页码，从 0 开始。即在第一页签章，传值 0。
-            "x" => $x,//盖章点 x 坐标
-            "y" => $y,//盖章点 y 坐标
+
+            //关键字定位签章
+            "keyword_strategy" => $keyword_strategy,//关键字签章策略
+            "sign_keyword" => $sign_keyword,//定位关键字
+            //坐标签章
+//            "x" => $x,//盖章点 x 坐标
+//            "y" => $y,//盖章点 y 坐标
         ]);
     }
 
@@ -610,18 +616,26 @@ class FddServer
      * @param string $doc_title
      * @param string $return_url
      * @param string $customer_mobile
+     * @param string $sign_keyword
+     * @param string $keyword_strategy
      * @return array
      */
-    public function extsign($transaction_id, $contract_id, $customer_id, $doc_title, $return_url, $customer_mobile)
+
+    public function extsign($transaction_id, $contract_id, $customer_id, $customer_mobile, $doc_title, $return_url, $sign_keyword, $keyword_strategy = '2')
     {
 
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id))
+                sha1($this->appId . strtoupper(md5($transaction_id . $this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id))
                 )
             )
         );
-        return $this->curlSend("extsign", 'get', [
+//        $signature_positions=json_encode([
+//            'x'=>22.44,
+//            'y'=>33.33,
+//            'pagenum'=>2,//以0开始第几页定位
+//        ]);
+        $arr = [
             //公共参数
             "app_id" => $this->appId,
             "timestamp" => $this->timestamp,
@@ -631,12 +645,20 @@ class FddServer
             "transaction_id" => $transaction_id,//交易号
             "contract_id" => $contract_id,//合同编号
             "customer_id" => $customer_id,//客户编号
-            "doc_title" => $doc_title,//客户角色  1-接入平台；2-仅适用互金行业担保公司或担保人；3-接入平台客户（互金行业指投资人）；4-仅适用互金行业借款企业或者借款人如果需要开通自动签权限请联系法
+            "customer_mobile" => $customer_mobile,//客户编号
             "return_url" => $return_url,//页面跳转URL（签署结果同步通知）
-            "customer_mobile" => $customer_mobile,//手机号
-        ]);
+            "doc_title" => $doc_title,//合同标题
+            //关键字定位签章
+            "keyword_strategy" => $keyword_strategy,//关键字签章策略
+            "sign_keyword" => $sign_keyword,//定位关键字
+            //坐标定位
+//            'client_type'=>$client_type,//1 个人 2 企业 默认为 1
+//            'signature_positions'=>$signature_positions,
+        ];
+        $url_str = http_build_query($arr);
+        $url2 = $this->host . 'extsign.api?' . $url_str;
+        header("location:$url2");
     }
-
 
     /**
      *此接口将打开页面
@@ -652,7 +674,7 @@ class FddServer
                 )
             )
         );
-        return $this->curlSend("view_contract", 'get', [
+        $arr = [
             //公共参数
             "app_id" => $this->appId,
             "timestamp" => $this->timestamp,
@@ -661,7 +683,10 @@ class FddServer
             //业务参数
             "contract_id" => $contract_id,//合同编号
 
-        ]);
+        ];
+        $url_str = http_build_query($arr);
+        $url2 = $this->host . 'viewContract.api?' . $url_str;
+        header("location:$url2");
     }
 
 
@@ -669,9 +694,10 @@ class FddServer
      *
      *  合同下载
      * @param string $contract_id
+     * @param bool $down true 直接下载，false 返回下载地址
      * @return array
      */
-    public function downLoadContract($contract_id)
+    public function downLoadContract($contract_id, $down = true)
     {
         $msg_digest = base64_encode(
             strtoupper(
@@ -679,7 +705,7 @@ class FddServer
                 )
             )
         );
-        return $this->curlSend("downLoadContract", 'get', [
+        $arr = [
             //公共参数
             "app_id" => $this->appId,
             "timestamp" => $this->timestamp,
@@ -688,7 +714,17 @@ class FddServer
             //业务参数
             "contract_id" => $contract_id,//合同编号
 
-        ]);
+        ];
+        $url_str = http_build_query($arr);
+        $url2 = $this->host . 'downLoadContract.api?' . $url_str;
+        //返回下载地址
+        if ($down) {
+            header("location:$url2");
+        } else {
+            return $url2;
+            //直接下载
+        }
+
     }
 
 
@@ -702,7 +738,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$contract_id))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $contract_id))
                 )
             )
         );
@@ -764,12 +800,12 @@ class FddServer
      * @param string $page_modify
      * @return array
      */
-    public function getPersonVerifyUrl($customer_id, $notify_url, $verified_way = '0', $page_modify = '1', $cert_flag = '0')
+    public function getPersonVerifyUrl($customer_id, $notify_url, $verified_way = '4', $page_modify = '1', $cert_flag = '0')
     {
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret.$customer_id.$notify_url.$page_modify.$verified_way))
+                        $this->appSecret . $customer_id . $notify_url . $page_modify . $verified_way))
                 )
             )
         );
@@ -784,7 +820,7 @@ class FddServer
             "verified_way" => $verified_way,//实名认证套餐类型
             "page_modify" => $page_modify,//是否允许用户页面修改1 允许，2 不允许
             "notify_url" => $notify_url,//回调地址 异步通知认证结果
-          //  "cert_flag" => $cert_flag,//是否认证成功后自动申请实名证书参数值为“0”：不申请，参数值为“1”：自动申请
+            //  "cert_flag" => $cert_flag,//是否认证成功后自动申请实名证书参数值为“0”：不申请，参数值为“1”：自动申请
         ]);
     }
 
@@ -800,7 +836,7 @@ class FddServer
     {
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$customer_id.$verified_serialno))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id . $verified_serialno))
                 )
             )
         );
@@ -828,7 +864,7 @@ class FddServer
 
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$customer_id.$verified_serialno))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $customer_id . $verified_serialno))
                 )
             )
         );
@@ -856,7 +892,7 @@ class FddServer
         $timestamp = date("YmdHis");
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret .$uuid))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $uuid))
                 )
             )
         );
@@ -879,30 +915,32 @@ class FddServer
      * @param string $data 传入参数
      * @return array $temp 返回数组参数
      */
-    private function curlSend($url, $method = 'post', $data = '')
+    private function curlSend($url, $method = 'post', $data = '', $json_decode = true)
     {
         $fadada_url = $this->host . $url . '.api';
-        try{
-        $ch = curl_init(); //初始化
-        $headers = array('Accept-Charset: utf-8');
-        //设置URL和相应的选项
-        curl_setopt($ch, CURLOPT_URL, $fadada_url); //指定请求的URL
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method)); //提交方式
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE); //不验证SSL
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE); //不验证SSL
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); //设置HTTP头字段的数组
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible;MSIE 5.01;Windows NT 5.0)'); //头的字符串
+        try {
+            $ch = curl_init(); //初始化
+            $headers = array('Accept-Charset: utf-8');
+            //设置URL和相应的选项
+            curl_setopt($ch, CURLOPT_URL, $fadada_url); //指定请求的URL
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method)); //提交方式
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE); //不验证SSL
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE); //不验证SSL
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); //设置HTTP头字段的数组
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible;MSIE 5.01;Windows NT 5.0)'); //头的字符串
 
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt($ch, CURLOPT_AUTOREFERER, 1); //自动设置header中的Referer:信息
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data); //提交数值
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_AUTOREFERER, 1); //自动设置header中的Referer:信息
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data); //提交数值
 
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //是否输出到屏幕上,true不直接输出
-        $temp = curl_exec($ch); //执行并获取结果
-        $temp = json_decode($temp);
-        curl_close($ch);
-        return $temp; //return 返回值
-        }catch (\Exception $e){
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //是否输出到屏幕上,true不直接输出
+            $temp = curl_exec($ch); //执行并获取结果
+            if ($json_decode) {
+                $temp = json_decode($temp);
+            }
+            curl_close($ch);
+            return $temp; //return 返回值
+        } catch (\Exception $e) {
             return $e;
         }
     }
