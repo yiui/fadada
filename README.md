@@ -6,23 +6,20 @@
 
 fadada for php
 ## Run environment
-- PHP 5.3+.
+- PHP 5.5+.
 - cURL extension.
 
-Tips:
-
-- In Ubuntu, you can use the ***apt-get*** package manager to install the *PHP cURL extension*: `sudo apt-get install php5-curl`.
 
 ## 安装
 
 - If you use the ***composer*** to manage project dependencies, run the following command in your project's root directory:
 
-        composer require yiui/fadada
+        composer require yiui/fadada "*"
 
    You can also declare the dependency on fadada for PHP in the `composer.json` file.
 
         "require": {
-            "yiui/fadada": "~1.0"
+            "yiui/fadada": "~1.0.1"
         }
 
    Then run `composer install` to install the dependency. After the Composer Dependency Manager is installed, import the dependency in your PHP code: 
