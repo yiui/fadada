@@ -1,10 +1,6 @@
 ﻿# fadada SDK for PHP
 
-[![Latest Stable Version](https://poser.pugx.org/yiui/fadada/v/stable)](https://packagist.org/packages/yiui/fadada)
-[![Build Status](https://travis-ci.org/yiui/fadada.svg?branch=master)](https://travis-ci.org/yiui/fadada)
-[![Coverage Status](https://coveralls.io/repos/github/yiui/fadada/badge.svg?branch=master)](https://coveralls.io/github/yiui/fadada?branch=master)
 
-## [README of Chinese](https://github.com/yiui/fadada/blob/master/README-CN.md)
 
 ## Overview
 
@@ -17,7 +13,7 @@ Tips:
 
 - In Ubuntu, you can use the ***apt-get*** package manager to install the *PHP cURL extension*: `sudo apt-get install php5-curl`.
 
-## Install OSS PHP SDK
+## 安装
 
 - If you use the ***composer*** to manage project dependencies, run the following command in your project's root directory:
 
@@ -42,12 +38,36 @@ Tips:
 
 ### Common classes
 
-### Initialize an OSSClient
+### 安装
 
 
 ```php
 /**
-*继承配置参数
+<?php
+
+namespace common\components;
+
+use yiui\fadada\FddServer;
+
+/**
+ *
+ * 法大大接口继承,
+ *
+ **/
+class Fadada extends FddServer
+{
+    public $appId;
+    public $appSecret;
+    public $host;
+
+    public function __construct()
+    {
+        $this->appId = "";
+        $this->appSecret = "";
+        $this->host = '';
+        parent::__construct($this->appId, $this->appSecret, $this->host);
+    }
+}
 ***/
 ```
 
