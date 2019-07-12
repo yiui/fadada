@@ -1,13 +1,19 @@
 <?php
 /**
+ * Created by PhpStorm.
+ * User: yiui
+ * Date: 2019/6/12
+ * Time: 14:54
+ */
+
+
+namespace yiui\fadada;
+/**
  * 法大大合同对接接口
  * 合同处理
  * 个人企业存证
  * 合同签署
  */
-
-namespace yiui\fadada;
-
 
 /**
  * Class FddServer

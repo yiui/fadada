@@ -4,11 +4,9 @@
 
 ## Overview
 
-fadada for php
+php 对接法大大
 ## Run environment
 - PHP 5.5+.
-- cURL extension.
-
 
 ## 安装
 
