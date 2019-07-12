@@ -1,16 +1,22 @@
 {
     "name": "yiui/fadada",
-    "description": "fadada for php",
+    "description": "fadada for php (对接法大大)",
     "type": "library",
-    "keywords": ["yii2","extension","document"],
+    "keywords": ["yii2","fadada","fdd"],
     "license": "MIT",
     "authors": [
         {
-            "name": "nature",
+            "name": "yiui",
             "email": "yowwoy@outlook.com"
         }
     ],
     "minimum-stability": "stable",
+    "require": {
+        "php": ">=5.5",
+        "ext-curl": "*",
+        "ext-openssl": "*",
+        "ext-json": "*"
+    },
     "autoload": {
         "psr-4": {
             "yiui\\fadada\\": "src"
