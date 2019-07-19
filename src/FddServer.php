@@ -1,19 +1,13 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: yiui
- * Date: 2019/6/12
- * Time: 14:54
- */
-
-
-namespace yiui\fadada;
-/**
  * 法大大合同对接接口
  * 合同处理
  * 个人企业存证
  * 合同签署
  */
+
+namespace yiui\fadada;
+
 
 /**
  * Class FddServer
@@ -530,7 +524,30 @@ class FddServer
         ]);
     }
 
-
+    /**
+     *
+     *  模板删除
+     * @param string $contract_id
+     * @return array
+     */
+    public function templateDelete($template_id)
+    {
+        $msg_digest = base64_encode(
+            strtoupper(
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $template_id))
+                )
+            )
+        );
+        return $this->curlSend("template_delete", 'post', [
+            //公共参数
+            "app_id" => $this->appId,
+            "timestamp" => $this->timestamp,
+            "v" => $this->version,
+            "msg_digest" => $msg_digest,
+            //业务参数
+            "template_id" => $template_id,//模板编号
+        ]);
+    }
     /**
      *
      *  模板填充
@@ -627,7 +644,7 @@ class FddServer
      * @return array
      */
 
-    public function extsign($transaction_id, $contract_id, $customer_id, $customer_mobile, $doc_title, $return_url, $sign_keyword, $keyword_strategy = '2')
+    public function extsign($transaction_id, $contract_id, $customer_id, $customer_mobile, $doc_title, $return_url, $sign_keyword, $keyword_strategy)
     {
 
         $msg_digest = base64_encode(
@@ -637,9 +654,9 @@ class FddServer
             )
         );
 //        $signature_positions=json_encode([
-//            'x'=>22.44,
-//            'y'=>33.33,
-//            'pagenum'=>2,//以0开始第几页定位
+//            'x'=>20.22,
+//            'y'=>20.66,
+//            'pagenum'=>2,
 //        ]);
         $arr = [
             //公共参数
@@ -657,9 +674,10 @@ class FddServer
             //关键字定位签章
             "keyword_strategy" => $keyword_strategy,//关键字签章策略
             "sign_keyword" => $sign_keyword,//定位关键字
-            //坐标定位
-//            'client_type'=>$client_type,//1 个人 2 企业 默认为 1
-//            'signature_positions'=>$signature_positions,
+            //定位
+//            "position_type" => 1,//0-关键字（默认）1-坐标
+//            "client_type" => 1,//1 个人 2 企业 默认为 1
+//            "signature_positions" => $signature_positions,//坐标数组
         ];
         $url_str = http_build_query($arr);
         $url2 = $this->host . 'extsign.api?' . $url_str;
