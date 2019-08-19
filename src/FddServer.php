@@ -54,8 +54,8 @@ class FddServer
 
     /**
      * 用户或企业账号 获取客户编码
-     * @param inter $open_id 用户在接入方唯一id
-     * @param inter $account_type 账户类型，1个人，2企业
+     * @param string $open_id 用户在接入方唯一id
+     * @param string $account_type 账户类型，1个人，2企业
      * @return array
      */
     public function accountRegister($open_id, $account_type = 1)
@@ -963,9 +963,12 @@ class FddServer
                 $temp = json_decode($temp);
             }
             curl_close($ch);
+            if($temp==null){
+                exit('Unknown JSON error');
+            }
             return $temp; //return 返回值
         } catch (\Exception $e) {
-            return $e;
+            exit($e->getMessage());
         }
     }
 
