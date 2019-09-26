@@ -9,6 +9,8 @@
 namespace yiui\fadada;
 
 
+use bonza\fdd\exception\JsonException;
+
 /**
  * Class FddServer
  */
@@ -54,8 +56,8 @@ class FddServer
 
     /**
      * 用户或企业账号 获取客户编码
-     * @param string $open_id 用户在接入方唯一id
-     * @param string $account_type 账户类型，1个人，2企业
+     * @param inter $open_id 用户在接入方唯一id
+     * @param inter $account_type 账户类型，1个人，2企业
      * @return array
      */
     public function accountRegister($open_id, $account_type = 1)
@@ -136,16 +138,13 @@ class FddServer
      * @param string $verified_type
      * @return array
      */
-    public function personDeposit($customer_id, $name, $idcard, $mobile, $preservation_name, $preservation_data_provider, $mobile_essential_factor, $document_type = 0, $cert_flag = 1, $verified_type = 2)
+    public function personDeposit($customer_id, $name, $idcard, $preservation_name, $preservation_data_provider,$public_security_essential_factor, $document_type = 0, $cert_flag = 1, $verified_type = 1)
     {
-        //verifiedType=2 公安部三要素
-//        $mobile_essential_factor = json_encode([
-//            'transactionId' => $transactionId,//交易号
-//        ]);
+
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret . $cert_flag . $customer_id . $document_type . $idcard . $mobile . $mobile_essential_factor . $name . $preservation_data_provider . $preservation_name . $verified_type))
+                        $this->appSecret . $cert_flag . $customer_id . $document_type . $idcard .$public_security_essential_factor. $name . $preservation_data_provider . $preservation_name . $verified_type))
                 )
             )
         );
@@ -162,13 +161,59 @@ class FddServer
             "verified_type" => $verified_type,//1:公安部二要素(姓名+身份证);2:手机三要素(姓名+身份证+手机号);3:银行卡三要素(姓名+身份证+银行卡);4:四要素(姓名+身份证+手机号+银行卡)Z：其他
             "name" => $name,//姓名
             "idcard" => $idcard,//证件号
-            "mobile" => $mobile,//手机号
             "document_type" => $document_type,//证件类型 默认是 0：身份证， 具体查看 5.18 附录
-            "mobile_essential_factor" => $mobile_essential_factor,// 手机三要素
+            "public_security_essential_factor" => $public_security_essential_factor,// 二要素
             "cert_flag" => $cert_flag,//是 否认 证成 功后 自动 申请 实名证书参 数值 为“0”：不申请，参 数值 为“1”：自动申请
         ]);
     }
 
+
+//    /**
+//     *
+//     *
+//     * 个人实名信息存证
+//     * @param string $customer_id
+//     * @param string $name
+//     * @param string $idcard
+//     * @param string $mobile
+//     * @param string $preservation_name
+//     * @param string $preservation_data_provider
+//     * @param string $mobile_essential_factor
+//     * @param string $preservation_name
+//     * @param string $document_type
+//     * @param string $cert_flag
+//     * @param string $verified_type
+//     * @return array
+//     */
+//    public function personDeposit($customer_id, $name, $idcard, $mobile, $preservation_name, $preservation_data_provider, $mobile_essential_factor, $document_type = 0, $cert_flag = 1, $verified_type = 2)
+//    {
+//
+//        $msg_digest = base64_encode(
+//            strtoupper(
+//                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
+//                        $this->appSecret . $cert_flag . $customer_id . $document_type . $idcard . $mobile . $mobile_essential_factor . $name . $preservation_data_provider . $preservation_name . $verified_type))
+//                )
+//            )
+//        );
+//        return $this->curlSend("person_deposit", 'post', [
+//            //公共参数
+//            "app_id" => $this->appId,
+//            "timestamp" => $this->timestamp,
+//            "v" => $this->version,
+//            "msg_digest" => $msg_digest,
+//            //业务参数
+//            "customer_id" => $customer_id,//客户编号
+//            "preservation_name" => $preservation_name,//存证名称
+//            "preservation_data_provider" => $preservation_data_provider,//存证提供方
+//            "verified_type" => $verified_type,//1:公安部二要素(姓名+身份证);2:手机三要素(姓名+身份证+手机号);3:银行卡三要素(姓名+身份证+银行卡);4:四要素(姓名+身份证+手机号+银行卡)Z：其他
+//            "name" => $name,//姓名
+//            "idcard" => $idcard,//证件号
+//            "mobile" => $mobile,//手机号
+//            "document_type" => $document_type,//证件类型 默认是 0：身份证， 具体查看 5.18 附录
+//            "mobile_essential_factor" => $mobile_essential_factor,// 手机三要素
+//            "cert_flag" => $cert_flag,//是 否认 证成 功后 自动 申请 实名证书参 数值 为“0”：不申请，参 数值 为“1”：自动申请
+//        ]);
+//    }
 
     /**
      *
@@ -204,6 +249,36 @@ class FddServer
         ]);
     }
 
+
+    /**
+     *
+     *
+     * 身份证验证
+     * @param string $idCard
+     * @param string $name
+     * @return array
+     */
+    public function checkIdCard($name, $idCard)
+    {
+        $idCard= $this->encrypt($idCard , $this->appSecret);
+        $idCard = strtoupper($idCard[1]);
+        $msg_digest = base64_encode(
+            strtoupper(
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret))
+                )
+            )
+        );
+        return $this->curlSend("checkIdCard", 'post', [
+            //公共参数
+            "app_id" => $this->appId,
+            "timestamp" => $this->timestamp,
+            "v" => $this->version,
+            "msg_digest" => $msg_digest,
+            //业务参数
+            "name" => $name,
+            "idCard" => $idCard,
+        ]);
+    }
     /**
      *
      * 3des加密
@@ -524,6 +599,74 @@ class FddServer
         ]);
     }
 
+
+    /**
+     *此接口将打开页面
+     *  模板查看
+     * @param string $template_id
+     * @return array
+     */
+    public function viewTemplate($template_id)
+    {
+        $msg_digest = base64_encode(
+            strtoupper(
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $template_id))
+                )
+            )
+        );
+        $arr = [
+            //公共参数
+            "app_id" => $this->appId,
+            "timestamp" => $this->timestamp,
+            "v" => $this->version,
+            "msg_digest" => $msg_digest,
+            //业务参数
+            "template_id" => $template_id,//合同编号
+
+        ];
+        $url_str = http_build_query($arr);
+        $url2 = $this->host . 'view_template.api?' . $url_str;
+        header("location:$url2");
+    }
+
+
+
+    /**
+     *
+     *  模板下载
+     * @param string $template_id
+     * @param bool $down true 直接下载，false 返回下载地址
+     * @return array
+     */
+    public function templateDownload($template_id, $down = true)
+    {
+        $msg_digest = base64_encode(
+            strtoupper(
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $template_id))
+                )
+            )
+        );
+        $arr = [
+            //公共参数
+            "app_id" => $this->appId,
+            "timestamp" => $this->timestamp,
+            "v" => $this->version,
+            "msg_digest" => $msg_digest,
+            //业务参数
+            "template_id" => $template_id,//合同编号
+
+        ];
+        $url_str = http_build_query($arr);
+        $url2 = $this->host . 'download_template.api?' . $url_str;
+        //返回下载地址
+        if ($down) {
+            header("location:$url2");
+        } else {
+            return $url2;
+            //直接下载
+        }
+
+    }
     /**
      *
      *  模板删除
@@ -789,12 +932,12 @@ class FddServer
      * @param string $company_principal_type
      * @return array
      */
-    public function getCompanyVerifyUrl($customer_id, $notify_url, $legal_info, $page_modify = 1, $company_principal_type = 1)
+    public function getCompanyVerifyUrl($customer_id, $notify_url, $legal_info, $page_modify = 1, $company_principal_type = 1,$cert_flag=1)
     {
 
         $msg_digest = base64_encode(
             strtoupper(
-                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $company_principal_type . $customer_id . $legal_info . $notify_url . $page_modify))
+                sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1($this->appSecret . $cert_flag.$company_principal_type . $customer_id . $legal_info . $notify_url . $page_modify))
                 )
             )
         );
@@ -810,6 +953,7 @@ class FddServer
             "notify_url" => $notify_url,//回调地址
             "company_principal_type" => $company_principal_type,//企业负责人身份:1. 法人，2. 代理人
             "legal_info" => $legal_info,//法人信息
+            "cert_flag" => $cert_flag,//参数值为“0”：不申请，参数值为“1”：自动申请
 
 
         ]);
@@ -963,12 +1107,9 @@ class FddServer
                 $temp = json_decode($temp);
             }
             curl_close($ch);
-            if($temp==null){
-                exit('Unknown JSON error');
-            }
             return $temp; //return 返回值
         } catch (\Exception $e) {
-            exit($e->getMessage());
+            throw new JsonException('Null result with non-null input');
         }
     }
 
