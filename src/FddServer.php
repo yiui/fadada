@@ -138,13 +138,13 @@ class FddServer
      * @param string $verified_type
      * @return array
      */
-    public function personDeposit($customer_id, $name, $idcard, $preservation_name, $preservation_data_provider,$public_security_essential_factor, $document_type = 0, $cert_flag = 1, $verified_type = 1)
+    public function personDeposit($customer_id, $name, $idcard, $mobile, $preservation_name, $preservation_data_provider,$mobile_essential_factor, $document_type = 0, $cert_flag = 1, $verified_type = 2)
     {
 
         $msg_digest = base64_encode(
             strtoupper(
                 sha1($this->appId . strtoupper(md5($this->timestamp)) . strtoupper(sha1(
-                        $this->appSecret . $cert_flag . $customer_id . $document_type . $idcard .$public_security_essential_factor. $name . $preservation_data_provider . $preservation_name . $verified_type))
+                        $this->appSecret . $cert_flag . $customer_id . $document_type . $idcard . $mobile . $mobile_essential_factor. $name . $preservation_data_provider . $preservation_name . $verified_type))
                 )
             )
         );
@@ -162,7 +162,8 @@ class FddServer
             "name" => $name,//姓名
             "idcard" => $idcard,//证件号
             "document_type" => $document_type,//证件类型 默认是 0：身份证， 具体查看 5.18 附录
-            "public_security_essential_factor" => $public_security_essential_factor,// 二要素
+            'mobile'=>$mobile,
+            "mobile_essential_factor" => $mobile_essential_factor,// 三要素
             "cert_flag" => $cert_flag,//是 否认 证成 功后 自动 申请 实名证书参 数值 为“0”：不申请，参 数值 为“1”：自动申请
         ]);
     }
@@ -627,6 +628,7 @@ class FddServer
         $url_str = http_build_query($arr);
         $url2 = $this->host . 'view_template.api?' . $url_str;
         header("location:$url2");
+        exit;
     }
 
 
@@ -661,6 +663,7 @@ class FddServer
         //返回下载地址
         if ($down) {
             header("location:$url2");
+            exit;
         } else {
             return $url2;
             //直接下载
@@ -781,13 +784,14 @@ class FddServer
      * @param string $customer_id
      * @param string $doc_title
      * @param string $return_url
+     * @param string $notify_url
      * @param string $customer_mobile
      * @param string $sign_keyword
      * @param string $keyword_strategy
      * @return array
      */
 
-    public function extsign($transaction_id, $contract_id, $customer_id, $customer_mobile, $doc_title, $return_url, $sign_keyword, $keyword_strategy)
+    public function extsign($transaction_id, $contract_id, $customer_id, $customer_mobile, $doc_title, $return_url,$notify_url, $sign_keyword, $keyword_strategy)
     {
 
         $msg_digest = base64_encode(
@@ -813,6 +817,7 @@ class FddServer
             "customer_id" => $customer_id,//客户编号
             "customer_mobile" => $customer_mobile,//客户编号
             "return_url" => $return_url,//页面跳转URL（签署结果同步通知）
+            "notify_url"=>$notify_url,//异步结果通知
             "doc_title" => $doc_title,//合同标题
             //关键字定位签章
             "keyword_strategy" => $keyword_strategy,//关键字签章策略
@@ -825,6 +830,7 @@ class FddServer
         $url_str = http_build_query($arr);
         $url2 = $this->host . 'extsign.api?' . $url_str;
         header("location:$url2");
+        exit;
     }
 
     /**
@@ -854,6 +860,7 @@ class FddServer
         $url_str = http_build_query($arr);
         $url2 = $this->host . 'viewContract.api?' . $url_str;
         header("location:$url2");
+        exit;
     }
 
 
@@ -887,6 +894,7 @@ class FddServer
         //返回下载地址
         if ($down) {
             header("location:$url2");
+            exit;
         } else {
             return $url2;
             //直接下载
